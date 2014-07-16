@@ -4,6 +4,7 @@ import threading
 from http_dict import http_status_dict
 import pymongo
 from pymongo import MongoClient
+from url_parser import *
 
 global req
 req = requests.get('https://www.python.org/')
@@ -24,6 +25,7 @@ get_http_status()
 get_host_headers()
 
 print http_status_dict[str(req_stat)]
+print html_source
 
 """
 client1 = MongoClient()
