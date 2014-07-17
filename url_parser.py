@@ -1,7 +1,16 @@
-import htmllib, formatter, urllib
+﻿import htmllib, formatter, urllib, var
+
 html_source = htmllib.HTMLParser(formatter.NullFormatter())
-html_source.feed(urllib.urlopen("http://www.engeene.it").read())
+#create default formatter. Each parser is associated with a Formatter object used to output parsed
+#data. Since we don't need to do any output, it is sufficient to use the default 'do-nothing' NullFormatter() defined in the formatter package.
+html_source.feed(urllib.urlopen(var.url_target).read())
 html_source.close()
-for url in html_source.anchorlist:
-	print url
+
+
+"""
+Biblio:
+Python programming — text and web mining - Finn ˚Arup Nielsen
+http://cis.poly.edu/cs912/parsing.txt
+"""
+
 

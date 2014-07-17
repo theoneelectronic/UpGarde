@@ -1,31 +1,45 @@
-import requests
-import json
-import threading
+import requests, json, pymongo, var
 from http_dict import http_status_dict
-import pymongo
 from pymongo import MongoClient
 from url_parser import *
 
-global req
-req = requests.get('https://www.python.org/')
+#-----Open connection with the target URL (specified in var module)-----#
+req = requests.get(var.url_target)
 
+#-----Get the HTTP status code from the target URL-----#
 def get_http_status():
-    #threading.Timer(20, get_http_status).start()
     global req_stat
     req_stat = req.status_code
-          
+get_http_status()
+
+#-----Get the headers from the target URL-----#          
 def get_host_headers():
-    #threading.Timer(30, get_host_headers).start()
     global headers
     headers = req.headers
     print json.dumps(dict(headers))
     print "\n"
-
-get_http_status()
 get_host_headers()
 
-print http_status_dict[str(req_stat)]
-print html_source
+#-----Describe status code by getting description from http_dict module-----#
+http_status = http_status_dict[str(req_stat)]
+
+#------Generation of URL list from parsers-------#
+html_source_list = []
+for url in html_source.anchorlist:
+    html_source_list.append(url)
+
+#------Writing results in the text file-------#
+output_txt = open("UpGarde-Result.txt", "w")
+output_txt.write("UpGarde test results as follows" + "\n" + "\n")
+output_txt.write("---Target host:--- " + var.url_target + "\n" + "\n")
+output_txt.write("--HTTP status:--" + "\n")
+output_txt.write(http_status + "\n" + "\n")
+output_txt.write("--URL structure:--" + "\n")
+output_txt.write("\n".join(str(url) for url in html_source_list))
+output_txt.close()
+
+
+
 
 """
 client1 = MongoClient()
