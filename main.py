@@ -1,23 +1,24 @@
-import requests, json, pymongo, var, headers_parser
+import urllib2, json, var, headers_parser
 from http_dict import http_status_dict
-from pymongo import MongoClient
+"import pymongo"
+"from pymongo import MongoClient"
 from url_parser import *
 
 
 #-----Open connection with the target URL (specified in var module)-----#
-req = requests.get(var.url_target)
+req = urllib2.urlopen(var.url_target)
 
 #-----Get the HTTP status code from the target URL-----#
 def get_http_status():
     global req_stat
-    req_stat = req.status_code
+    req_stat = req.getcode()
 
 get_http_status()
 
 #-----Get the headers from the target URL-----#          
 def get_host_headers():
     global headers
-    headers = req.headers
+    headers = req.info()
     global json_headers
     json_headers = json.dumps(dict(headers))
 
