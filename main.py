@@ -1,4 +1,5 @@
 import urllib2, json, var, headers_parser
+from robot_parser import robot_parsed
 from http_dict import http_status_dict
 "import pymongo"
 "from pymongo import MongoClient"
@@ -40,7 +41,9 @@ output_txt.write("--HTTP status:--" + "\n")
 output_txt.write(http_status + "\n" + "\n")
 output_txt.write("--HTTP Headers:--" + "\n")
 output_txt.write(str(headers_parser.headers_source) + "\n")
-output_txt.write("--URL structure:--" + "\n")
+output_txt.write("--HTTP Headers:--" + "\n")
+output_txt.write("--Robots.txt:--" + "\n")
+output_txt.write(str(robot_parsed) + "\n")
 output_txt.write("\n".join(str(url) for url in html_source_list))
 output_txt.close()
 
