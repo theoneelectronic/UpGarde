@@ -33,8 +33,9 @@ html_source_list = []
 for url in html_source.anchorlist:
     html_source_list.append(url)
 
+
 #------Writing results in the text file-------#
-output_txt = open("UpGarde-Results.txt", "w")
+output_txt = open("results for " "%s" % var.url_name + ".txt", "w")
 output_txt.write("UpGarde test results as follows" + "\n" + "\n")
 output_txt.write("---Target host:--- " + "\n" + var.url_target + "\n" + "\n")
 output_txt.write("--HTTP status:--" + "\n")
