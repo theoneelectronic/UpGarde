@@ -35,14 +35,14 @@ for url in html_source.anchorlist:
 
 
 #------Writing results in the text file-------#
-output_txt = open("results for " "%s" % var.url_name + ".txt", "w")
+output_txt = open("results for " "%s" % var.url_target.lstrip("http://") + ".txt", "w")
+#method .lstrip is used to remove the leading part of text including "//" that/ mess with directories and breaks the program
 output_txt.write("UpGarde test results as follows" + "\n" + "\n")
 output_txt.write("---Target host:--- " + "\n" + var.url_target + "\n" + "\n")
 output_txt.write("--HTTP status:--" + "\n")
 output_txt.write(http_status + "\n" + "\n")
 output_txt.write("--HTTP Headers:--" + "\n")
 output_txt.write(str(headers_parser.headers_source) + "\n")
-output_txt.write("--HTTP Headers:--" + "\n")
 output_txt.write("--Robots.txt:--" + "\n")
 output_txt.write(str(robot_parsed) + "\n")
 output_txt.write("\n".join(str(url) for url in html_source_list))
