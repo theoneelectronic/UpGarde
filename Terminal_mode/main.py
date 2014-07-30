@@ -49,8 +49,6 @@ output_txt.write("\n".join(str(url) for url in html_source_list))
 output_txt.close()
 
 
-
-
 """
 client1 = MongoClient()
 db = client1.test_database1
