@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import urllib2, json, var, headers_parser
 from robot_parser import robot_parsed
 from http_dict import http_status_dict
