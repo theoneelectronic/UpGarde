@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import Tkinter as tk
-import urllib2, json, htmllib, formatter, urllib2
+import json, htmllib, formatter, urllib2
 from http_dict import http_status_dict
-from urllib2 import urlopen
+from urllib2 import *
 from contextlib import closing
 
 class Application(tk.Frame): 
@@ -12,10 +12,13 @@ class Application(tk.Frame):
         self.createWidgets()
     def createWidgets(self):
         self.EntryText = tk.Entry(self, bg='red')#creating the entry widget
-        self.GetButton = tk.Button(self, text='Print', #creating the action button
+        self.GetButton = tk.Button(self, text='Kumo it!', #creating the action button
                                 command=self.GetURL) #the command executes a custom function
+        self.TxtButton = tk.Button(self, text='Print to Txt',
+                                   command=self.PrintTxt)
         self.GetButton.grid(row=0, column=1) #placing the button in the grid
         self.EntryText.grid(row=0, column=0) #placing the entry widget in the grid
+        self.TxtButton.grid(row=1, column=1)
 
 #-----Open connection with the target URL (got from the Entry widget)-----#
     def GetURL(self):
@@ -30,16 +33,15 @@ class Application(tk.Frame):
 #-----Get the HTTP status code from the target URL-----#
     def get_http_status(self):
         self.req_stat = self.req.getcode()
-        print self.req_stat
        
 #-----Get the headers from the target URL-----#
     def get_host_headers(self):
-        headers = self.req.info()
-        self.json_headers = json.dumps(dict(headers))
+        self.headers = self.req.info()
+        self.json_headers = json.dumps(dict(self.headers))
             
 #-----Describe status code by getting description from http_dict module-----#
     def descr_http_status(self):
-        http_status = http_status_dict[str(self.req_stat)]
+        self.http_status = http_status_dict[str(self.req_stat)]
         
 #------Generation of URL list from parsers-------#
     def url_list(self):
@@ -48,23 +50,38 @@ class Application(tk.Frame):
         html_source.close()
         #create default formatter. Each parser is associated with a Formatter object used to output parsed
         #data. Since we don't need to do any output, it is sufficient to use the default 'do-nothing' NullFormatter() defined in the formatter package.
-        """
-        Biblio:
-        Python programming — text and web mining - Finn ˚Arup Nielsen
-        http://cis.poly.edu/cs912/parsing.txt
-        """
+        #Biblio:
+        #Python programming — text and web mining - Finn ˚Arup Nielsen
+        #http://cis.poly.edu/cs912/parsing.txt
         html_source_list = []
         for url in html_source.anchorlist:
             html_source_list.append(url)
+            self.parsed_url_list = ("\n".join(str(url) for url in html_source_list))
            
 #------parsing robot.txt file from host-------#
     def robot_parser(self):
         with closing(urlopen(self.url_target + "/robots.txt")) as stream:
             self.robot_parsed = stream.read()
-            print self.robot_parsed
+
+#------printing the results to txt file-------#
+    def PrintTxt(self):
+        output_txt = open("results for " "%s" % self.url_target.lstrip("http://") + ".txt", "w")
+        #method .lstrip is used to remove the leading part of text,
+        #including "//" that/ mess with directories and breaks the program
+        output_txt.write("Kumo test results as follows" + "\n" + "\n")
+        output_txt.write("---Target host:--- " + "\n" + self.url_target + "\n" + "\n")
+        output_txt.write("--HTTP status:--" + "\n")
+        output_txt.write(self.http_status + "\n" + "\n")
+        output_txt.write("--HTTP Headers:--" + "\n")
+        output_txt.write(str(self.headers) + "\n")
+        output_txt.write("--Robots.txt:--" + "\n")
+        output_txt.write(str(self.robot_parsed) + "\n")
+        output_txt.write("--Sitemap:--" + "\n")
+        output_txt.write(self.parsed_url_list)
+        output_txt.close()
 
 app = Application()   
-app.master.title('App') 
+app.master.title('Kumo') 
 app.mainloop()
 
 
