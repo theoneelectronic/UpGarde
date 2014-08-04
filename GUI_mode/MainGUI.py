@@ -11,14 +11,17 @@ class Application(tk.Frame):
         self.grid() 
         self.createWidgets()
     def createWidgets(self):
-        self.EntryText = tk.Entry(self, bg='red')#creating the entry widget
+        self.EntryText = tk.Entry(self)#creating the entry widget
         self.GetButton = tk.Button(self, text='Kumo it!', #creating the action button
-                                command=self.GetURL) #the command executes a custom function
+                                  command=self.GetURL) #the command executes a custom function
         self.TxtButton = tk.Button(self, text='Print to Txt',
-                                   command=self.PrintTxt)
-        self.GetButton.grid(row=0, column=1) #placing the button in the grid
+                                  command=self.PrintTxt)
+        self.QuitButton = tk.Button(self, text="Quit",
+                                    command=self.QuitApp)
+        self.GetButton.grid(row=0, column=1, sticky=tk.E) #placing the button in the grid
         self.EntryText.grid(row=0, column=0) #placing the entry widget in the grid
-        self.TxtButton.grid(row=1, column=1)
+        self.TxtButton.grid(row=1, column=1, sticky=tk.E)
+        self.QuitButton.grid(row=2, column=0, sticky=tk.W)
 
 #-----Open connection with the target URL (got from the Entry widget)-----#
     def GetURL(self):
@@ -79,6 +82,11 @@ class Application(tk.Frame):
         output_txt.write("--Sitemap:--" + "\n")
         output_txt.write(self.parsed_url_list)
         output_txt.close()
+
+#------quitting the application-------#
+    def QuitApp (self):
+        self.master.destroy()
+
 
 app = Application()   
 app.master.title('Kumo') 
