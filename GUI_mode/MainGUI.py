@@ -14,22 +14,26 @@ class Application(tk.Frame):
         self.createWidgets()
         
     def createWidgets(self):
+        #widgets creation
         self.StatusTextVar = tk.StringVar() #set a string variable
-        self.EntryText = tk.Entry(self)#creating the entry widget
+        self.EntryText = tk.Entry(self, width=23)#creating the entry widget
         self.GetButton = tk.Button(self, height=1, width=9, text='Kumo it!', #creating the action button
                                   command=self.GetURL) #the command executes a custom function
         self.TxtButton = tk.Button(self, height=1, width=9, text='Print to Txt',
                                   command=self.PrintTxt)
         self.QuitButton = tk.Button(self, height=1, width=9, text="Quit",
                                     command=self.QuitApp) 
-        self.StatusLabel = tk.Label(self, height=1, width=25, anchor=tk.W,
-                                    textvariable=self.StatusTextVar) #create a label to print the status of the operation
-        
+        self.StatusLabel0 = tk.Label(self, height=1, width=20, text="Status:",
+                                  anchor=tk.W)
+        self.StatusLabel = tk.Label(self, height=1, width=20, relief="sunken",
+                                    anchor=tk.W, textvariable=self.StatusTextVar) #create a label to print the status of the operation
+        #widgets positioning
         self.GetButton.grid(row=0, column=1, sticky=tk.E) #placing the button in the grid
         self.EntryText.grid(row=0, column=0, sticky=tk.W) #placing the entry widget in the grid
         self.TxtButton.grid(row=1, column=1, sticky=tk.E)
-        self.StatusLabel.grid(row=2, column=0, sticky=tk.W)
-        self.QuitButton.grid(row=2, column=1, sticky=tk.E)
+        self.StatusLabel0.grid(row=2, column=0, sticky=tk.W)
+        self.StatusLabel.grid(row=3, column=0, sticky=tk.W)
+        self.QuitButton.grid(row=3, column=1, sticky=tk.E)
 
 #-----Open connection with the target URL (got from the Entry widget)-----#
     def GetURL(self):
@@ -74,7 +78,7 @@ class Application(tk.Frame):
         for url in html_source.anchorlist:
             html_source_list.append(url)
             self.parsed_url_list = ("\n".join(str(url) for url in html_source_list))
-           
+        
 #------parsing robot.txt file from host-------#
     def robot_parser(self):
         with closing(urlopen(self.url_target + "/robots.txt")) as stream:
