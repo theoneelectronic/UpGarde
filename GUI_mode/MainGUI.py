@@ -6,33 +6,46 @@ from http_dict import http_status_dict
 from urllib2 import *
 from contextlib import closing
 
-class Application(tk.Frame): 
+
+class Application(tk.Frame):
     def __init__(self, master=None):
         tk.Frame.__init__(self, master) 
         self.grid() 
         self.createWidgets()
+        
     def createWidgets(self):
+        self.StatusTextVar = tk.StringVar() #set a string variable
         self.EntryText = tk.Entry(self)#creating the entry widget
-        self.GetButton = tk.Button(self, text='Kumo it!', #creating the action button
+        self.GetButton = tk.Button(self, height=1, width=9, text='Kumo it!', #creating the action button
                                   command=self.GetURL) #the command executes a custom function
-        self.TxtButton = tk.Button(self, text='Print to Txt',
+        self.TxtButton = tk.Button(self, height=1, width=9, text='Print to Txt',
                                   command=self.PrintTxt)
-        self.QuitButton = tk.Button(self, text="Quit",
-                                    command=self.QuitApp)
+        self.QuitButton = tk.Button(self, height=1, width=9, text="Quit",
+                                    command=self.QuitApp) 
+        self.StatusLabel = tk.Label(self, height=1, width=25, anchor=tk.W,
+                                    textvariable=self.StatusTextVar) #create a label to print the status of the operation
+        
         self.GetButton.grid(row=0, column=1, sticky=tk.E) #placing the button in the grid
-        self.EntryText.grid(row=0, column=0) #placing the entry widget in the grid
+        self.EntryText.grid(row=0, column=0, sticky=tk.W) #placing the entry widget in the grid
         self.TxtButton.grid(row=1, column=1, sticky=tk.E)
-        self.QuitButton.grid(row=2, column=0, sticky=tk.W)
+        self.StatusLabel.grid(row=2, column=0, sticky=tk.W)
+        self.QuitButton.grid(row=2, column=1, sticky=tk.E)
 
 #-----Open connection with the target URL (got from the Entry widget)-----#
     def GetURL(self):
-         self.url_target = ("http://www." + self.EntryText.get())
-         self.req = urllib2.urlopen(self.url_target)
-         self.get_http_status()
-         self.get_host_headers()
-         self.descr_http_status()
-         self.url_list()
-         self.robot_parser()
+        try: #try to open the URL
+            self.url_target = ("http://www." + self.EntryText.get())
+            self.req = urllib2.urlopen(self.url_target)
+            self.get_http_status()
+            self.get_host_headers()
+            self.descr_http_status()
+            self.url_list()
+            self.robot_parser()
+            self.StatusTextVar.set("Success!")
+        except: #behaviour in case of insuccess
+            self.StatusTextVar.set("Wrong input. Please retry")
+            pass
+        
 
 #-----Get the HTTP status code from the target URL-----#
     def get_http_status(self):
