@@ -27,18 +27,27 @@ class Application(tk.Frame):
                                   anchor=tk.W)
         self.StatusLabel = tk.Label(self, height=1, width=20, relief="sunken",
                                     anchor=tk.W, textvariable=self.StatusTextVar) #create a label to print the status of the operation
+        self.ResultsLabel = tk.Label(self, height=1, width=20, text="Results", anchor=tk.W)
+        self.ResultsText = tk.Text(self, height=20, width=100) #create results text widget
+        self.ResultsScrollbar = tk.Scrollbar(self, orient=tk.VERTICAL) #create scrollbar connected to the text widget
+        self.ResultsScrollbar.config(command=self.ResultsText.yview)
+        self.ResultsText.configure(yscrollcommand=self.ResultsScrollbar.set)
+
         #widgets positioning
         self.GetButton.grid(row=0, column=1, sticky=tk.E) #placing the button in the grid
         self.EntryText.grid(row=0, column=0, sticky=tk.W) #placing the entry widget in the grid
         self.TxtButton.grid(row=1, column=1, sticky=tk.E)
         self.StatusLabel0.grid(row=2, column=0, sticky=tk.W)
         self.StatusLabel.grid(row=3, column=0, sticky=tk.W)
-        self.QuitButton.grid(row=3, column=1, sticky=tk.E)
+        self.ResultsLabel.grid(row=4, column=0, sticky=tk.W)
+        self.ResultsText.grid(row=5, column=0)
+        self.ResultsScrollbar.grid(row=5, column=1,sticky=tk.NS)
+        self.QuitButton.grid(row=6, column=1, sticky=tk.E)
 
 #-----Open connection with the target URL (got from the Entry widget)-----#
     def GetURL(self):
         try: #try to open the URL
-            self.url_target = ("http://www." + self.EntryText.get())
+            self.url_target = ("http://www." + self.EntryText.get()) 
             self.req = urllib2.urlopen(self.url_target)
             self.get_http_status()
             self.get_host_headers()
@@ -46,14 +55,23 @@ class Application(tk.Frame):
             self.url_list()
             self.robot_parser()
             self.StatusTextVar.set("Success!")
+            #begin to insert text in the text widget
+            self.ResultsText.insert('end', ("Results for " "%s" % self.url_target)+ "\n" + "\n")
+            self.ResultsText.insert('end', "--HTTP status:--" + "\n")
+            self.ResultsText.insert('end', (str(self.http_status) + "\n"+ "\n"))
+            self.ResultsText.insert('end', "--HTTP Headers:--" + "\n")
+            self.ResultsText.insert('end', (str(self.headers)+ "\n "+ "\n"))
+            self.ResultsText.insert('end', "--Robots.txt:--" + "\n")
+            self.ResultsText.insert('end', (str(self.robot_parsed)+ "\n "+ "\n"))
+            self.ResultsText.insert('end', "--Sitemap:--" + "\n")
+            self.ResultsText.insert('end', (str(self.parsed_url_list)+ "\n "+ "\n"))
         except: #behaviour in case of insuccess
             self.StatusTextVar.set("Wrong input. Please retry")
-            pass
-        
+            pass       
 
 #-----Get the HTTP status code from the target URL-----#
     def get_http_status(self):
-        self.req_stat = self.req.getcode()
+        self.req_stat = self.req.getcode()     
        
 #-----Get the headers from the target URL-----#
     def get_host_headers(self):
@@ -62,7 +80,7 @@ class Application(tk.Frame):
             
 #-----Describe status code by getting description from http_dict module-----#
     def descr_http_status(self):
-        self.http_status = http_status_dict[str(self.req_stat)]
+        self.http_status = http_status_dict[str(self.req_stat)]    
         
 #------Generation of URL list from parsers-------#
     def url_list(self):
