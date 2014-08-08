@@ -13,7 +13,10 @@ class Application(tk.Frame):
         self.grid() 
         self.createWidgets()
         self.master.resizable(False, False) #make the window not resizable
-        self.master.wm_iconbitmap("favicon_trex.ico") #set the favicon
+        try:
+            self.master.wm_iconbitmap("favicon_trex.ico") #set the favicon
+        except:
+            self.master.wm_iconbitmap("favicon_trex.xbm")
         
     def createWidgets(self):
         #widgets creation
