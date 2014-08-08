@@ -12,6 +12,8 @@ class Application(tk.Frame):
         tk.Frame.__init__(self, master) 
         self.grid() 
         self.createWidgets()
+        self.master.resizable(False, False) #make the window not resizable
+        self.master.wm_iconbitmap("favicon_trex.ico") #set the favicon
         
     def createWidgets(self):
         #widgets creation
@@ -41,7 +43,7 @@ class Application(tk.Frame):
         self.StatusLabel.grid(row=3, column=0, sticky=tk.W)
         self.ResultsLabel.grid(row=4, column=0, sticky=tk.W)
         self.ResultsText.grid(row=5, column=0)
-        self.ResultsScrollbar.grid(row=5, column=1,sticky=tk.NS)
+        self.ResultsScrollbar.grid(row=5, column=1, sticky=tk.NS)
         self.QuitButton.grid(row=6, column=1, sticky=tk.E)
 
 #-----Open connection with the target URL (got from the Entry widget)-----#
