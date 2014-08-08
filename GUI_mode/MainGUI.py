@@ -13,15 +13,20 @@ class Application(tk.Frame):
         self.grid() 
         self.createWidgets()
         self.master.resizable(False, False) #make the window not resizable
+        #self.master.iconbitmap("Kumo.ico")
+    
         try:
-            self.master.wm_iconbitmap("favicon_trex.ico") #set the favicon
+            self.master.wm_iconbitmap("Kumo.ico") #set the favicon
         except:
             self.master.wm_iconbitmap("favicon_trex.xbm")
-        
+            pass
+  
     def createWidgets(self):
         #widgets creation
         self.StatusTextVar = tk.StringVar() #set a string variable
-        self.EntryText = tk.Entry(self, width=23)#creating the entry widget
+        self.EntryLabel = tk.Label(self, width=32, anchor=tk.W,
+                                   text="Digit your URL (Hostname only)")
+        self.EntryText = tk.Entry(self, width=32)#creating the entry widget
         self.GetButton = tk.Button(self, height=1, width=9, text='Kumo it!', #creating the action button
                                   command=self.GetURL) #the command executes a custom function
         self.TxtButton = tk.Button(self, height=1, width=9, text='Print to Txt',
@@ -30,7 +35,7 @@ class Application(tk.Frame):
                                     command=self.QuitApp) 
         self.StatusLabel0 = tk.Label(self, height=1, width=20, text="Status:",
                                   anchor=tk.W)
-        self.StatusLabel = tk.Label(self, height=1, width=20, relief="sunken",
+        self.StatusLabel = tk.Label(self, height=1, width=24, relief="sunken",
                                     anchor=tk.W, textvariable=self.StatusTextVar) #create a label to print the status of the operation
         self.ResultsLabel = tk.Label(self, height=1, width=20, text="Results", anchor=tk.W)
         self.ResultsText = tk.Text(self, height=20, width=100) #create results text widget
@@ -39,15 +44,16 @@ class Application(tk.Frame):
         self.ResultsText.configure(yscrollcommand=self.ResultsScrollbar.set)
 
         #widgets positioning
-        self.GetButton.grid(row=0, column=1, sticky=tk.E) #placing the button in the grid
+        self.GetButton.grid(row=0, column=0) #placing the button in the grid
         self.EntryText.grid(row=0, column=0, sticky=tk.W) #placing the entry widget in the grid
-        self.TxtButton.grid(row=1, column=1, sticky=tk.E)
+        self.EntryLabel.grid(row=1, column=0, sticky=tk.W)
+        self.TxtButton.grid(row=1, column=0)
         self.StatusLabel0.grid(row=2, column=0, sticky=tk.W)
         self.StatusLabel.grid(row=3, column=0, sticky=tk.W)
         self.ResultsLabel.grid(row=4, column=0, sticky=tk.W)
-        self.ResultsText.grid(row=5, column=0)
-        self.ResultsScrollbar.grid(row=5, column=1, sticky=tk.NS)
-        self.QuitButton.grid(row=6, column=1, sticky=tk.E)
+        self.ResultsText.grid(row=5, column=0, columnspan=3)
+        self.ResultsScrollbar.grid(row=5, column=3, sticky=tk.NS)
+        self.QuitButton.grid(row=6, column=4, sticky=tk.E)
 
 #-----Open connection with the target URL (got from the Entry widget)-----#
     def GetURL(self):
