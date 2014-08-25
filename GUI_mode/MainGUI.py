@@ -24,9 +24,10 @@ class Application(tk.Frame):
     def createWidgets(self):
         #widgets creation
         self.StatusTextVar = tk.StringVar() #set a string variable
-        self.EntryLabel = tk.Label(self, width=32, anchor=tk.W,
+        self.RBVar = tk.StringVar() #set a string variable
+        self.EntryLabel = tk.Label(self, width=36, anchor=tk.W,
                                    text="Digit your URL (Hostname only)")
-        self.EntryText = tk.Entry(self, width=32)#creating the entry widget
+        self.EntryText = tk.Entry(self, width=32, textvariable=self.RBVar)#creating the entry widget
         self.GetButton = tk.Button(self, height=1, width=9, text='Kumo it!', #creating the action button
                                   command=self.GetURL) #the command executes a custom function
         self.TxtButton = tk.Button(self, height=1, width=9, text='Print to Txt',
@@ -42,23 +43,29 @@ class Application(tk.Frame):
         self.ResultsScrollbar = tk.Scrollbar(self, orient=tk.VERTICAL) #create scrollbar connected to the text widget
         self.ResultsScrollbar.config(command=self.ResultsText.yview)
         self.ResultsText.configure(yscrollcommand=self.ResultsScrollbar.set)
-
+        #sets the two radiobutton to choose the beginning of the entry widget text 
+        self.RadioButton2 = tk.Radiobutton(self, padx=67, text="https://", variable=self.RBVar, value="https://www.")
+        self.RadioButton1 = tk.Radiobutton(self, text="http://", variable=self.RBVar, value="http://www.")
+            
         #widgets positioning
         self.GetButton.grid(row=0, column=0) #placing the button in the grid
         self.EntryText.grid(row=0, column=0, sticky=tk.W) #placing the entry widget in the grid
         self.EntryLabel.grid(row=1, column=0, sticky=tk.W)
         self.TxtButton.grid(row=1, column=0)
-        self.StatusLabel0.grid(row=2, column=0, sticky=tk.W)
-        self.StatusLabel.grid(row=3, column=0, sticky=tk.W)
-        self.ResultsLabel.grid(row=4, column=0, sticky=tk.W)
-        self.ResultsText.grid(row=5, column=0, columnspan=3)
-        self.ResultsScrollbar.grid(row=5, column=3, sticky=tk.NS)
-        self.QuitButton.grid(row=6, column=4, sticky=tk.E)
+        self.StatusLabel0.grid(row=3, column=0, sticky=tk.W)
+        self.RadioButton1.grid(row=2, column=0, sticky=tk.W)
+        self.RadioButton2.grid(row=2, column=0, sticky=tk.W)
+        self.StatusLabel.grid(row=5, column=0, sticky=tk.W)
+        self.ResultsLabel.grid(row=6, column=0, sticky=tk.W)
+        self.ResultsText.grid(row=7, column=0, columnspan=3)
+        self.ResultsScrollbar.grid(row=7, column=3, sticky=tk.NS)
+        self.QuitButton.grid(row=8, column=4, sticky=tk.E)
+        
 
 #-----Open connection with the target URL (got from the Entry widget)-----#
     def GetURL(self):
         try: #try to open the URL
-            self.url_target = ("http://www." + self.EntryText.get()) 
+            self.url_target = (self.EntryText.get())
             self.req = urllib2.urlopen(self.url_target)
             self.get_http_status()
             self.get_host_headers()
@@ -131,9 +138,8 @@ class Application(tk.Frame):
         output_txt.close()
 
 #------quitting the application-------#
-    def QuitApp (self):
+    def QuitApp(self):
         self.master.destroy()
-
 
 app = Application()   
 app.master.title('Kumo') 
