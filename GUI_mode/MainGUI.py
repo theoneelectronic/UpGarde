@@ -25,13 +25,14 @@ class Application(tk.Frame):
         #widgets creation
         self.StatusTextVar = tk.StringVar() #set a string variable
         self.RBVar = tk.StringVar() #set a string variable
+        self.ButtonFrame = tk.Frame(self)#create the frame for the command button row
         self.EntryLabel = tk.Label(self, width=36, anchor=tk.W,
                                    text="Digit your URL (Hostname only)")
         self.EntryText = tk.Entry(self, width=32, textvariable=self.RBVar)#creating the entry widget
         self.GetButton = tk.Button(self, height=1, width=9, text='Kumo it!', #creating the action button
                                   command=self.GetURL) #the command executes a custom function
-        self.TxtButton = tk.Button(self, height=1, width=9, text='Print to Txt',
-                                  command=self.PrintTxt)
+        self.TxtButton = tk.Button(self.ButtonFrame, height=2, width=9, text='Print to Txt',
+                                  command=self.PrintTxt) #note that the widget has parent another widget (ButtonFrame)
         self.QuitButton = tk.Button(self, height=1, width=9, text="Quit",
                                     command=self.QuitApp) 
         self.StatusLabel0 = tk.Label(self, height=1, width=20, text="Status:",
@@ -46,33 +47,37 @@ class Application(tk.Frame):
         #sets the two radiobutton to choose the beginning of the entry widget text 
         self.RadioButton2 = tk.Radiobutton(self, padx=67, text="https://", variable=self.RBVar, value="https://www.")
         self.RadioButton1 = tk.Radiobutton(self, text="http://", variable=self.RBVar, value="http://www.")
+        self.Save2Json = tk.Button(self.ButtonFrame, height=2, width=12, text="Save headers \n to JSON",
+                                   command=self.JsonOut) #note that the widget has parent another widget (ButtonFrame)
             
         #widgets positioning
+        self.ButtonFrame.grid(row=2, column=0, sticky=tk.W) #placing the button frame
         self.GetButton.grid(row=0, column=0) #placing the button in the grid
         self.EntryText.grid(row=0, column=0, sticky=tk.W) #placing the entry widget in the grid
-        self.EntryLabel.grid(row=1, column=0, sticky=tk.W)
-        self.TxtButton.grid(row=1, column=0)
-        self.StatusLabel0.grid(row=3, column=0, sticky=tk.W)
-        self.RadioButton1.grid(row=2, column=0, sticky=tk.W)
-        self.RadioButton2.grid(row=2, column=0, sticky=tk.W)
-        self.StatusLabel.grid(row=5, column=0, sticky=tk.W)
-        self.ResultsLabel.grid(row=6, column=0, sticky=tk.W)
-        self.ResultsText.grid(row=7, column=0, columnspan=3)
-        self.ResultsScrollbar.grid(row=7, column=3, sticky=tk.NS)
-        self.QuitButton.grid(row=8, column=4, sticky=tk.E)
+        self.EntryLabel.grid(row=1, column=0, sticky=tk.W) #position is relative to the ButtonFrame widget
+        self.TxtButton.grid(row=0, column=0) #position is relative to the ButtonFrame widget
+        self.Save2Json.grid(row=0, column=1) #position is relative to the ButtonFrame widget
+        self.StatusLabel0.grid(row=4, column=0, sticky=tk.W)
+        self.RadioButton1.grid(row=3, column=0, sticky=tk.W)
+        self.RadioButton2.grid(row=3, column=0, sticky=tk.W)
+        self.StatusLabel.grid(row=6, column=0, sticky=tk.W)
+        self.ResultsLabel.grid(row=7, column=0, sticky=tk.W)
+        self.ResultsText.grid(row=8, column=0, columnspan=3)
+        self.ResultsScrollbar.grid(row=8, column=3, sticky=tk.NS)
+        self.QuitButton.grid(row=9, column=4, sticky=tk.E)
         
 
 #-----Open connection with the target URL (got from the Entry widget)-----#
     def GetURL(self):
         try: #try to open the URL
-            self.url_target = (self.EntryText.get())
-            self.req = urllib2.urlopen(self.url_target)
-            self.get_http_status()
-            self.get_host_headers()
-            self.descr_http_status()
-            self.url_list()
-            self.robot_parser()
-            self.StatusTextVar.set("Success!")
+            self.url_target = (self.EntryText.get()) #gets the URL from the entry widget
+            self.req = urllib2.urlopen(self.url_target) #opens the URL
+            self.get_http_status() #calls the_http status function
+            self.get_host_headers() #calls the host_headers function
+            self.descr_http_status() #calls the descr_http_status function
+            self.url_list() #calls the url_list function
+            self.robot_parser() #calls the robot_parser function
+            self.StatusTextVar.set("Success!") #sets the status bar text if success
             #begin to insert text in the text widget
             self.ResultsText.insert('end', ("Results for " "%s" % self.url_target)+ "\n" + "\n")
             self.ResultsText.insert('end', "--HTTP status:--" + "\n")
@@ -136,6 +141,13 @@ class Application(tk.Frame):
         output_txt.write("--Sitemap:--" + "\n")
         output_txt.write(self.parsed_url_list)
         output_txt.close()
+
+#------creating the json file------#
+    def JsonOut(self):
+        json_headers = json.dumps(dict(self.headers))
+        JSON_output = open("JSON headers for " "%s" % self.url_target.lstrip("http://") + ".txt", "w")
+        JSON_output.write(json_headers)
+        JSON_output.close()
 
 #------quitting the application-------#
     def QuitApp(self):
