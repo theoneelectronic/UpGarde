@@ -71,7 +71,11 @@ class Application(tk.Frame):
     def GetURL(self):
         try: #try to open the URL
             self.url_target = (self.EntryText.get()) #gets the URL from the entry widget
-            self.req = urllib2.urlopen(self.url_target) #opens the URL
+            self.request = urllib2.Request(self.url_target)
+            self.request.addheaders = [('User-agent', 'Mozilla/5.0')]
+            self.req = urllib2.urlopen(self.request)
+            
+            #----begins calling the functions----#
             self.get_http_status() #calls the_http status function
             self.get_host_headers() #calls the host_headers function
             self.descr_http_status() #calls the descr_http_status function
@@ -156,7 +160,3 @@ class Application(tk.Frame):
 app = Application()   
 app.master.title('Kumo') 
 app.mainloop()
-
-
-
-
