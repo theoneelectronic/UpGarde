@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import Tkinter as tk
+import ttk
 import json, htmllib, formatter, urllib2
 from http_dict import http_status_dict
+from ua_dict import ua_dict, ua_list
 from urllib2 import *
 from contextlib import closing
 
@@ -22,9 +24,13 @@ class Application(tk.Frame):
             pass
   
     def createWidgets(self):
-        #widgets creation
+        #----defining variables----#
         self.StatusTextVar = tk.StringVar() #set a string variable
         self.RBVar = tk.StringVar() #set a string variable
+        self.OMVar = tk.StringVar()
+        self.OMVar.set(ua_list[0])
+
+        #----create widgets----#
         self.ButtonFrame = tk.Frame(self)#create the frame for the command button row
         self.EntryLabel = tk.Label(self, width=36, anchor=tk.W,
                                    text="Digit your URL (Hostname only)")
@@ -49,14 +55,17 @@ class Application(tk.Frame):
         self.RadioButton1 = tk.Radiobutton(self, text="http://", variable=self.RBVar, value="http://www.")
         self.Save2Json = tk.Button(self.ButtonFrame, height=2, width=12, text="Save headers \n to JSON",
                                    command=self.JsonOut) #note that the widget has parent another widget (ButtonFrame)
+        self.ua_listbox = tk.OptionMenu(self.ButtonFrame, self.OMVar, *ua_list) #create a list of user agents
+        #http://infohost.nmt.edu/tcc/help/pubs/tkinter/web/optionmenu.html
             
-        #widgets positioning
+        #----place widgets with the grid method----#
         self.ButtonFrame.grid(row=2, column=0, sticky=tk.W) #placing the button frame
         self.GetButton.grid(row=0, column=0) #placing the button in the grid
         self.EntryText.grid(row=0, column=0, sticky=tk.W) #placing the entry widget in the grid
         self.EntryLabel.grid(row=1, column=0, sticky=tk.W) #position is relative to the ButtonFrame widget
         self.TxtButton.grid(row=0, column=0) #position is relative to the ButtonFrame widget
         self.Save2Json.grid(row=0, column=1) #position is relative to the ButtonFrame widget
+        self.ua_listbox.grid(row=0, column=2, sticky=tk.N) #position is relative to the ButtonFrame widget
         self.StatusLabel0.grid(row=4, column=0, sticky=tk.W)
         self.RadioButton1.grid(row=3, column=0, sticky=tk.W)
         self.RadioButton2.grid(row=3, column=0, sticky=tk.W)
@@ -70,9 +79,10 @@ class Application(tk.Frame):
 #-----Open connection with the target URL (got from the Entry widget)-----#
     def GetURL(self):
         try: #try to open the URL
+            ual = str(self.OMVar.get()) #define user agent variable according to what selected on the ua list
+            uad = ua_dict[str(ual)] #get the user agent from the ua dictionary with the key same as the ua selected by the user from the ua list
             self.url_target = (self.EntryText.get()) #gets the URL from the entry widget
-            self.request = urllib2.Request(self.url_target)
-            self.request.addheaders = [('User-agent', 'Mozilla/5.0')]
+            self.request = urllib2.Request(self.url_target, headers={'User-agent': '%s' % uad } ) #create the request with the user agent selected by the user from the list
             self.req = urllib2.urlopen(self.request)
             
             #----begins calling the functions----#
@@ -82,7 +92,9 @@ class Application(tk.Frame):
             self.url_list() #calls the url_list function
             self.robot_parser() #calls the robot_parser function
             self.StatusTextVar.set("Success!") #sets the status bar text if success
-            #begin to insert text in the text widget
+            
+            
+            #----begin to insert text in the text widget----#
             self.ResultsText.insert('end', ("Results for " "%s" % self.url_target)+ "\n" + "\n")
             self.ResultsText.insert('end', "--HTTP status:--" + "\n")
             self.ResultsText.insert('end', (str(self.http_status) + "\n"+ "\n"))
