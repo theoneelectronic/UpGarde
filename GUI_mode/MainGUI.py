@@ -35,10 +35,10 @@ class Application(tk.Frame):
         self.EntryLabel = tk.Label(self, width=36, anchor=tk.W,
                                    text="Digit your URL (Hostname only)")
         self.EntryText = tk.Entry(self, width=32, textvariable=self.RBVar)#creating the entry widget
-        self.GetButton = tk.Button(self, height=1, width=9, text='Kumo it!', #creating the action button
+        self.GetButton = tk.Button(self, height=1, width=9, text='Kumo it!', bg="PaleGreen1",#creating the action button
                                   command=self.GetURL) #the command executes a custom function
         self.TxtButton = tk.Button(self.ButtonFrame, height=2, width=9, text='Print to Txt',
-                                  command=self.PrintTxt) #note that the widget has parent another widget (ButtonFrame)
+                                  bg="White", command=self.PrintTxt) #note that the widget has parent another widget (ButtonFrame)
         self.QuitButton = tk.Button(self, height=1, width=9, text="Quit",
                                     command=self.QuitApp) 
         self.StatusLabel0 = tk.Label(self, height=1, width=20, text="Status:",
@@ -54,18 +54,21 @@ class Application(tk.Frame):
         self.RadioButton2 = tk.Radiobutton(self, padx=67, text="https://", variable=self.RBVar, value="https://www.")
         self.RadioButton1 = tk.Radiobutton(self, text="http://", variable=self.RBVar, value="http://www.")
         self.Save2Json = tk.Button(self.ButtonFrame, height=2, width=12, text="Save headers \n to JSON",
-                                   command=self.JsonOut) #note that the widget has parent another widget (ButtonFrame)
+                                   bg="White", command=self.JsonOut) #note that the widget has parent another widget (ButtonFrame)
         self.ua_listbox = tk.OptionMenu(self.ButtonFrame, self.OMVar, *ua_list) #create a list of user agents
-        #http://infohost.nmt.edu/tcc/help/pubs/tkinter/web/optionmenu.html
+        self.ua_listbox.config(width=35, anchor=tk.W, bg="White")
+        self.ua_Label = tk.Label(self.ButtonFrame, width=36, anchor=tk.SW,
+                                   text="Please select your User-Agent")
             
         #----place widgets with the grid method----#
-        self.ButtonFrame.grid(row=2, column=0, sticky=tk.W) #placing the button frame
+        self.ButtonFrame.grid(row=2, column=0, sticky=tk.SW) #placing the button frame
         self.GetButton.grid(row=0, column=0) #placing the button in the grid
         self.EntryText.grid(row=0, column=0, sticky=tk.W) #placing the entry widget in the grid
-        self.EntryLabel.grid(row=1, column=0, sticky=tk.W) #position is relative to the ButtonFrame widget
-        self.TxtButton.grid(row=0, column=0) #position is relative to the ButtonFrame widget
-        self.Save2Json.grid(row=0, column=1) #position is relative to the ButtonFrame widget
-        self.ua_listbox.grid(row=0, column=2, sticky=tk.N) #position is relative to the ButtonFrame widget
+        self.ua_Label.grid(row=0, column=2, sticky=tk.NE) #position is relative to the ButtonFrame widget
+        self.EntryLabel.grid(row=2, column=0, sticky=tk.NW) #position is relative to the ButtonFrame widget
+        self.TxtButton.grid(row=1, column=0) #position is relative to the ButtonFrame widget
+        self.Save2Json.grid(row=1, column=1) #position is relative to the ButtonFrame widget
+        self.ua_listbox.grid(row=1, column=2, sticky=tk.S) #position is relative to the ButtonFrame widget
         self.StatusLabel0.grid(row=4, column=0, sticky=tk.W)
         self.RadioButton1.grid(row=3, column=0, sticky=tk.W)
         self.RadioButton2.grid(row=3, column=0, sticky=tk.W)
