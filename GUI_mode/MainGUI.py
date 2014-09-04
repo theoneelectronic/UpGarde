@@ -7,7 +7,7 @@ from http_dict import http_status_dict
 from ua_dict import ua_dict, ua_list
 from urllib2 import *
 from contextlib import closing
-
+import subprocess
 
 class Application(tk.Frame):
     def __init__(self, master=None):
@@ -59,6 +59,8 @@ class Application(tk.Frame):
         self.ua_listbox.config(width=35, anchor=tk.W, bg="White")
         self.ua_Label = tk.Label(self.ButtonFrame, width=36, anchor=tk.SW,
                                    text="Please select your User-Agent")
+        self.TracerouteButton = tk.Button(self.ButtonFrame, width=15, text="Traceroute",
+                                          bg="White", command=self.traceroute)
             
         #----place widgets with the grid method----#
         self.ButtonFrame.grid(row=2, column=0, sticky=tk.SW) #placing the button frame
@@ -69,6 +71,7 @@ class Application(tk.Frame):
         self.TxtButton.grid(row=1, column=0) #position is relative to the ButtonFrame widget
         self.Save2Json.grid(row=1, column=1) #position is relative to the ButtonFrame widget
         self.ua_listbox.grid(row=1, column=2, sticky=tk.S) #position is relative to the ButtonFrame widget
+        self.TracerouteButton.grid(row=1, column=3, sticky=tk.S) #position is relative to the ButtonFrame widget
         self.StatusLabel0.grid(row=4, column=0, sticky=tk.W)
         self.RadioButton1.grid(row=3, column=0, sticky=tk.W)
         self.RadioButton2.grid(row=3, column=0, sticky=tk.W)
@@ -167,6 +170,20 @@ class Application(tk.Frame):
         JSON_output = open("JSON headers for " "%s" % self.url_target.lstrip("http://") + ".txt", "w")
         JSON_output.write(json_headers)
         JSON_output.close()
+
+#-----traceroute function-------#
+    def traceroute(self):
+        host = str(self.EntryText.get().lstrip("http://"))
+        p = subprocess.Popen(["tracert", '-d', '-w', '100', host], 
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        self.ResultsText.insert('end', "--Traceroute:--")
+        while True:
+            line = p.stdout.readline()
+            if not line: break
+            print '-->',line,
+            self.ResultsText.insert('end', (str(line)))
+            
+        p.wait()
 
 #------quitting the application-------#
     def QuitApp(self):
