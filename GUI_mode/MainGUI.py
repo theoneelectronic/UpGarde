@@ -8,6 +8,7 @@ from ua_dict import ua_dict, ua_list
 from urllib2 import *
 from contextlib import closing
 import subprocess
+from time import strftime 
 
 class Application(tk.Frame):
     def __init__(self, master=None):
@@ -20,7 +21,6 @@ class Application(tk.Frame):
         try:
             self.master.wm_iconbitmap("Kumo.ico") #set the favicon
         except:
-            self.master.wm_iconbitmap("favicon_trex.xbm")
             pass
   
     def createWidgets(self):
@@ -36,11 +36,7 @@ class Application(tk.Frame):
                                    text="Digit your URL (Hostname only)")
         self.EntryText = tk.Entry(self, width=32, textvariable=self.RBVar)#creating the entry widget
         self.GetButton = tk.Button(self, height=1, width=9, text='Kumo it!', bg="PaleGreen1",#creating the action button
-                                  command=self.GetURL) #the command executes a custom function
-        self.TxtButton = tk.Button(self.ButtonFrame, height=2, width=9, text='Print to Txt',
-                                  bg="White", command=self.PrintTxt) #note that the widget has parent another widget (ButtonFrame)
-        self.QuitButton = tk.Button(self, height=1, width=9, text="Quit",
-                                    command=self.QuitApp) 
+                                  command=self.GetURL) #the command executes a custom function 
         self.StatusLabel0 = tk.Label(self, height=1, width=20, text="Status:",
                                   anchor=tk.W)
         self.StatusLabel = tk.Label(self, height=1, width=24, relief="sunken",
@@ -68,8 +64,7 @@ class Application(tk.Frame):
         self.EntryText.grid(row=0, column=0, sticky=tk.W) #placing the entry widget in the grid
         self.ua_Label.grid(row=0, column=2, sticky=tk.NE) #position is relative to the ButtonFrame widget
         self.EntryLabel.grid(row=2, column=0, sticky=tk.NW) #position is relative to the ButtonFrame widget
-        self.TxtButton.grid(row=1, column=0) #position is relative to the ButtonFrame widget
-        self.Save2Json.grid(row=1, column=1) #position is relative to the ButtonFrame widget
+        self.Save2Json.grid(row=1, column=0) #position is relative to the ButtonFrame widget
         self.ua_listbox.grid(row=1, column=2, sticky=tk.S) #position is relative to the ButtonFrame widget
         self.TracerouteButton.grid(row=1, column=3, sticky=tk.S) #position is relative to the ButtonFrame widget
         self.StatusLabel0.grid(row=4, column=0, sticky=tk.W)
@@ -78,9 +73,7 @@ class Application(tk.Frame):
         self.StatusLabel.grid(row=6, column=0, sticky=tk.W)
         self.ResultsLabel.grid(row=7, column=0, sticky=tk.W)
         self.ResultsText.grid(row=8, column=0, columnspan=3)
-        self.ResultsScrollbar.grid(row=8, column=3, sticky=tk.NS)
-        self.QuitButton.grid(row=9, column=4, sticky=tk.E)
-        
+        self.ResultsScrollbar.grid(row=8, column=3, sticky=tk.NS)        
 
 #-----Open connection with the target URL (got from the Entry widget)-----#
     def GetURL(self):
@@ -98,6 +91,7 @@ class Application(tk.Frame):
             self.url_list() #calls the url_list function
             self.robot_parser() #calls the robot_parser function
             self.StatusTextVar.set("Success!") #sets the status bar text if success
+            self.PrintTxt()
             
             
             #----begin to insert text in the text widget----#
@@ -149,20 +143,21 @@ class Application(tk.Frame):
 
 #------printing the results to txt file-------#
     def PrintTxt(self):
-        output_txt = open("results for " "%s" % self.url_target.lstrip("http://") + ".txt", "w")
+        self.output_txt = open("results for " "%s" % self.url_target.lstrip("http://") + ".txt", "w")
         #method .lstrip is used to remove the leading part of text,
         #including "//" that/ mess with directories and breaks the program
-        output_txt.write("Kumo test results as follows" + "\n" + "\n")
-        output_txt.write("---Target host:--- " + "\n" + self.url_target + "\n" + "\n")
-        output_txt.write("--HTTP status:--" + "\n")
-        output_txt.write(self.http_status + "\n" + "\n")
-        output_txt.write("--HTTP Headers:--" + "\n")
-        output_txt.write(str(self.headers) + "\n")
-        output_txt.write("--Robots.txt:--" + "\n")
-        output_txt.write(str(self.robot_parsed) + "\n")
-        output_txt.write("--Sitemap:--" + "\n")
-        output_txt.write(self.parsed_url_list)
-        output_txt.close()
+        self.output_txt.write("Kumo test results as follows" + "\n" + "\n")
+        self.output_txt.write("Test date: " + (strftime("%c")) + "\n" + "\n") #http://strftime.org/ - gets time and displays it as locale’s appropriate date and time representation.  
+        self.output_txt.write("---Target host:--- " + "\n" + self.url_target + "\n" + "\n")
+        self.output_txt.write("--HTTP status:--" + "\n")
+        self.output_txt.write(self.http_status + "\n" + "\n")
+        self.output_txt.write("--HTTP Headers:--" + "\n")
+        self.output_txt.write(str(self.headers) + "\n")
+        self.output_txt.write("--Robots.txt:--" + "\n")
+        self.output_txt.write(str(self.robot_parsed) + "\n")
+        self.output_txt.write("--Sitemap:--" + "\n")
+        self.output_txt.write(str(self.parsed_url_list) + "\n" + "\n")
+        self.output_txt.close()
 
 #------creating the json file------#
     def JsonOut(self):
@@ -174,18 +169,22 @@ class Application(tk.Frame):
 #-----traceroute function-------#
     def traceroute(self):
         host = str(self.EntryText.get().lstrip("http://"))
-        p = subprocess.Popen(["tracert", '-d', '-w', '100', host], 
+        p = subprocess.Popen(["tracert", '-d', '-w', '100', host], #calling the subprocess for the traceroute function "tracert in Windows"
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        self.ResultsText.insert('end', "--Traceroute:--")
-        while True:
-            line = p.stdout.readline()
+        self.output_txt = open("results for " "%s" % self.url_target.lstrip("http://") + ".txt", "a") #append title to the results file. If the file is non existent, then it is created
+        self.output_txt.write("--Traceroute:--" + "\n")
+        while True: #begin iteration
+            line = p.stdout.readline() #line is created reading the subprocess output
             if not line: break
-            print '-->',line,
-            self.ResultsText.insert('end', (str(line)))
-            
+            print '-->',line, #print to console
+            self.ResultsText.insert('end', (str(line))) #print to console
+            self.output_txt = open("results for " "%s" % self.url_target.lstrip("http://") + ".txt", "a") #append results to the results file. If the file is non existent, then it is created
+            self.output_txt.write(line) #actually writes each traceroute line to the file
+            self.output_txt.close()
+  
         p.wait()
 
-#------quitting the application-------#
+#------quitting the application--(deprecated)------#
     def QuitApp(self):
         self.master.destroy()
 
