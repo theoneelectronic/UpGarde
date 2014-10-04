@@ -92,7 +92,7 @@ class Application(tk.Frame):
             self.robot_parser() #calls the robot_parser function
             self.StatusTextVar.set("Success!") #sets the status bar text if success
             self.PrintTxt()
-            
+    
             
             #----begin to insert text in the text widget----#
             self.ResultsText.insert('end', ("Results for " "%s" % self.url_target)+ "\n" + "\n")
@@ -104,9 +104,21 @@ class Application(tk.Frame):
             self.ResultsText.insert('end', (str(self.robot_parsed)+ "\n "+ "\n"))
             self.ResultsText.insert('end', "--Sitemap:--" + "\n")
             self.ResultsText.insert('end', (str(self.parsed_url_list)+ "\n "+ "\n"))
-        except: #behaviour in case of insuccess
-            self.StatusTextVar.set("Wrong input. Please retry")
-            pass       
+        except URLError as e: #handling the urllib exceptions for lack of network or server request fulfillment
+            if hasattr(e, 'reason'):
+                self.StatusTextVar.set(e.reason)
+                print 'We failed to reach a server.'
+                print 'Reason: ', e.reason
+            elif hasattr(e, 'code'):
+                self.StatusTextVar.set(e.reason)
+                print 'The server couldn\'t fulfill the request.'
+                print 'Error code: ', e.code
+            else:
+                pass # everything is fine
+
+        #except: #behaviour in case of insuccess
+            #self.StatusTextVar.set("Wrong input. Please retry")
+            #pass       
 
 #-----Get the HTTP status code from the target URL-----#
     def get_http_status(self):
