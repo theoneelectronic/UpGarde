@@ -2,13 +2,14 @@
 # -*- coding: utf-8 -*-
 import Tkinter as tk
 import ttk
-import json, htmllib, formatter, urllib2
+import json, htmllib, formatter, urllib2, csv
 from http_dict import http_status_dict
 from ua_dict import ua_dict, ua_list
 from urllib2 import *
 from contextlib import closing
 import subprocess
-from time import strftime 
+from time import strftime
+import pythonwhois
 
 class Application(tk.Frame):
     def __init__(self, master=None):
@@ -17,7 +18,6 @@ class Application(tk.Frame):
         self.createWidgets()
         self.master.resizable(False, False) #make the window not resizable
         #self.master.iconbitmap("Kumo.ico")
-    
         try:
             self.master.wm_iconbitmap("Kumo.ico") #set the favicon
         except:
@@ -35,11 +35,14 @@ class Application(tk.Frame):
         self.EntryLabel = tk.Label(self, width=36, anchor=tk.W,
                                    text="Digit your URL (Hostname only)")
         self.EntryText = tk.Entry(self, width=32, textvariable=self.RBVar)#creating the entry widget
+        self.EntryText.insert(1, "http://www.")
         self.GetButton = tk.Button(self, height=1, width=9, text='Kumo it!', bg="PaleGreen1",#creating the action button
-                                  command=self.GetURL) #the command executes a custom function 
+                                  command=self.GetURL) #the command executes a custom function
+        self.TxtButton = tk.Button(self.ButtonFrame, height=2, width=9, text='Print to Txt',
+                                  bg="White", command=self.PrintTxt) #note that the widget has parent another widget (ButtonFrame)
         self.StatusLabel0 = tk.Label(self, height=1, width=20, text="Status:",
                                   anchor=tk.W)
-        self.StatusLabel = tk.Label(self, height=1, width=24, relief="sunken",
+        self.StatusLabel = tk.Label(self, height=1, width=60, relief="sunken",
                                     anchor=tk.W, textvariable=self.StatusTextVar) #create a label to print the status of the operation
         self.ResultsLabel = tk.Label(self, height=1, width=20, text="Results", anchor=tk.W)
         self.ResultsText = tk.Text(self, height=20, width=100) #create results text widget
@@ -47,28 +50,34 @@ class Application(tk.Frame):
         self.ResultsScrollbar.config(command=self.ResultsText.yview)
         self.ResultsText.configure(yscrollcommand=self.ResultsScrollbar.set)
         #sets the two radiobutton to choose the beginning of the entry widget text 
-        self.RadioButton2 = tk.Radiobutton(self, padx=67, text="https://", variable=self.RBVar, value="https://www.")
-        self.RadioButton1 = tk.Radiobutton(self, text="http://", variable=self.RBVar, value="http://www.")
+        self.RadioButton2 = tk.Radiobutton(self, text="https://", variable=self.RBVar, value="https://www.")
         self.Save2Json = tk.Button(self.ButtonFrame, height=2, width=12, text="Save headers \n to JSON",
                                    bg="White", command=self.JsonOut) #note that the widget has parent another widget (ButtonFrame)
-        self.ua_listbox = tk.OptionMenu(self.ButtonFrame, self.OMVar, *ua_list) #create a list of user agents
-        self.ua_listbox.config(width=35, anchor=tk.W, bg="White")
+        #self.ua_listbox = tk.OptionMenu(self.ButtonFrame, self.OMVar, *ua_list) #create a list of user agents
+        #self.ua_listbox.config(width=35, anchor=tk.W, bg="White")
         self.ua_Label = tk.Label(self.ButtonFrame, width=36, anchor=tk.SW,
-                                   text="Please select your User-Agent")
+                                   text="Custom User-Agent:")
         self.TracerouteButton = tk.Button(self.ButtonFrame, width=15, text="Traceroute",
                                           bg="White", command=self.traceroute)
+        self.UAEntryText = tk.Entry(self.ButtonFrame, width=32)#creating the entry widget for the custom user agent
+        self.WhoisButton = tk.Button(self.ButtonFrame, height=2, width=9, text='Whois',
+                                  bg="White", command=self.whois) #note that the widget has parent another widget (ButtonFrame)
+
             
         #----place widgets with the grid method----#
         self.ButtonFrame.grid(row=2, column=0, sticky=tk.SW) #placing the button frame
         self.GetButton.grid(row=0, column=0) #placing the button in the grid
         self.EntryText.grid(row=0, column=0, sticky=tk.W) #placing the entry widget in the grid
-        self.ua_Label.grid(row=0, column=2, sticky=tk.NE) #position is relative to the ButtonFrame widget
-        self.EntryLabel.grid(row=2, column=0, sticky=tk.NW) #position is relative to the ButtonFrame widget
-        self.Save2Json.grid(row=1, column=0) #position is relative to the ButtonFrame widget
-        self.ua_listbox.grid(row=1, column=2, sticky=tk.S) #position is relative to the ButtonFrame widget
-        self.TracerouteButton.grid(row=1, column=3, sticky=tk.S) #position is relative to the ButtonFrame widget
+        #self.ua_Label.grid(row=0, column=2, sticky=tk.NE) #position is relative to the ButtonFrame widget
+        self.EntryLabel.grid(row=1, column=0, sticky=tk.W) #position is relative to the ButtonFrame widget
+        self.TxtButton.grid(row=2, column=0, sticky=tk.W) #position is relative to the ButtonFrame widget
+        self.Save2Json.grid(row=2, column=1,sticky=tk.W) #position is relative to the ButtonFrame widget
+        #self.ua_listbox.grid(row=1, column=2, sticky=tk.S) #position is relative to the ButtonFrame widget
+        self.TracerouteButton.grid(row=2, column=3, sticky=tk.S) #position is relative to the ButtonFrame widget
+        self.WhoisButton.grid(row=2, column=4, sticky=tk.S) #position is relative to the ButtonFrame widget
+        self.UAEntryText.grid(row=3, column=1, sticky=tk.W)#position is relative to the ButtonFrame widget
+        self.ua_Label.grid(row=3, column=0, sticky=tk.W)#position is relative to the ButtonFrame widget
         self.StatusLabel0.grid(row=4, column=0, sticky=tk.W)
-        self.RadioButton1.grid(row=3, column=0, sticky=tk.W)
         self.RadioButton2.grid(row=3, column=0, sticky=tk.W)
         self.StatusLabel.grid(row=6, column=0, sticky=tk.W)
         self.ResultsLabel.grid(row=7, column=0, sticky=tk.W)
@@ -78,21 +87,33 @@ class Application(tk.Frame):
 #-----Open connection with the target URL (got from the Entry widget)-----#
     def GetURL(self):
         try: #try to open the URL
-            ual = str(self.OMVar.get()) #define user agent variable according to what selected on the ua list
-            uad = ua_dict[str(ual)] #get the user agent from the ua dictionary with the key same as the ua selected by the user from the ua list
-            self.url_target = (self.EntryText.get()) #gets the URL from the entry widget
-            self.request = urllib2.Request(self.url_target, headers={'User-agent': '%s' % uad } ) #create the request with the user agent selected by the user from the list
-            self.req = urllib2.urlopen(self.request)
+            try:
+                ual = str(self.UAEntryText.get()) #define user agent variable according to what selected on the ua list
+                uad = ua_dict[str(ual)] #get the user agent from the ua dictionary with the key same as the ua selected by the user from the ua list
+                self.url_target = (self.EntryText.get()) #gets the URL from the entry widget
+                self.request = urllib2.Request(self.url_target, headers={'User-agent': '%s' % uad } ) #create the request with the user agent selected by the user from the list
+                self.req = urllib2.urlopen(self.request)
+            except:
+                self.url_target = (self.EntryText.get())
+                self.request = urllib2.Request(self.url_target)
+                self.req = urllib2.urlopen(self.request)
+                                
+                #ual = str(self.OMVar.get()) #define user agent variable according to what selected on the ua list
+                #uad = ua_dict[str(ual)] #get the user agent from the ua dictionary with the key same as the ua selected by the user from the ua list
+                #self.url_target = (self.EntryText.get()) #gets the URL from the entry widget
+                #self.request = urllib2.Request(self.url_target, headers={'User-agent': '%s' % uad } ) #create the request with the user agent selected by the user from the list
+                #self.req = urllib2.urlopen(self.request)
             
             #----begins calling the functions----#
+            self.ResultsText.delete(1.0, "end") #delete previous text from the text window
             self.get_http_status() #calls the_http status function
             self.get_host_headers() #calls the host_headers function
             self.descr_http_status() #calls the descr_http_status function
             self.url_list() #calls the url_list function
             self.robot_parser() #calls the robot_parser function
             self.StatusTextVar.set("Success!") #sets the status bar text if success
-            self.PrintTxt()
-    
+            #self.PrintTxt()
+                
             
             #----begin to insert text in the text widget----#
             self.ResultsText.insert('end', ("Results for " "%s" % self.url_target)+ "\n" + "\n")
@@ -104,21 +125,22 @@ class Application(tk.Frame):
             self.ResultsText.insert('end', (str(self.robot_parsed)+ "\n "+ "\n"))
             self.ResultsText.insert('end', "--Sitemap:--" + "\n")
             self.ResultsText.insert('end', (str(self.parsed_url_list)+ "\n "+ "\n"))
+             
+            
         except URLError as e: #handling the urllib exceptions for lack of network or server request fulfillment
             if hasattr(e, 'reason'):
                 self.StatusTextVar.set(e.reason)
-                print 'We failed to reach a server.'
-                print 'Reason: ', e.reason
+                self.ResultsText.insert("end", "Kumo failed to reach a server. No network available or Check URL spelling ")
+                self.ResultsText.insert("end", "%s " % e.reason)
+                
             elif hasattr(e, 'code'):
-                self.StatusTextVar.set(e.reason)
+                self.StatusTextVar.set(e.code)
+                self.ResultsText.insert("end", "The server couldn\'t fulfill the request. ")
+                self.ResultsText.insert("end", "%s " % e.code)
                 print 'The server couldn\'t fulfill the request.'
                 print 'Error code: ', e.code
             else:
-                pass # everything is fine
-
-        #except: #behaviour in case of insuccess
-            #self.StatusTextVar.set("Wrong input. Please retry")
-            #pass       
+                pass # everything is fine  
 
 #-----Get the HTTP status code from the target URL-----#
     def get_http_status(self):
@@ -155,7 +177,10 @@ class Application(tk.Frame):
 
 #------printing the results to txt file-------#
     def PrintTxt(self):
-        self.output_txt = open("results for " "%s" % self.url_target.lstrip("http://") + ".txt", "w")
+        try:
+            self.output_txt = open("results for " "%s" % self.url_target.lstrip("http://") + ".txt", "a")
+        except:
+            self.output_txt = open("results for " "%s" % self.url_target.lstrip("https://") + ".txt", "a")
         #method .lstrip is used to remove the leading part of text,
         #including "//" that/ mess with directories and breaks the program
         self.output_txt.write("Kumo test results as follows" + "\n" + "\n")
@@ -170,6 +195,12 @@ class Application(tk.Frame):
         self.output_txt.write("--Sitemap:--" + "\n")
         self.output_txt.write(str(self.parsed_url_list) + "\n" + "\n")
         self.output_txt.close()
+
+    def printCSV(self):
+        self.output_txt = open("CSV results for " "%s" % self.url_target.lstrip("http://") + ".csv", "wb")
+        csv_out = self.ResultsText.get(1.0, "end")
+        self.output_txt.write(str(csv_out))
+        print csv_out
 
 #------creating the json file------#
     def JsonOut(self):
@@ -193,9 +224,31 @@ class Application(tk.Frame):
             self.output_txt = open("results for " "%s" % self.url_target.lstrip("http://") + ".txt", "a") #append results to the results file. If the file is non existent, then it is created
             self.output_txt.write(line) #actually writes each traceroute line to the file
             self.output_txt.close()
-  
         p.wait()
 
+#------------whois-------------#
+#use the module described here http://cryto.net/pythonwhois/usage.html
+    def whois(self):
+        try:
+            host = str(self.EntryText.get().lstrip("http://www.")) #clean the host from the useless part
+            whois = pythonwhois.net.get_whois_raw(host) #calls the function from the module
+            for item in whois:
+                self.ResultsText.insert('end', (str(item)+ "\n "+ "\n"))
+                self.output_txt = open("results for " "%s" % self.url_target.lstrip("http://") + ".txt", "a") #append results to the results file. If the file is non existent, then it is created
+                self.output_txt.write(item) #actually writes each traceroute line to the file
+                self.output_txt.close()
+
+        
+        except URLError as e: #handling the urllib exceptions for lack of network or server request fulfillment
+            if hasattr(e, 'reason'):
+                self.ResultsText.insert("end", "Kumo failed to reach a server. No network available or Check URL spelling ")
+                self.ResultsText.insert("end", "%s " % e.reason)
+            elif hasattr(e, 'code'):
+                self.ResultsText.insert("end", "The server couldn\'t fulfill the request. ")
+                self.ResultsText.insert("end", "%s " % e.code)
+            else:
+                pass # everything is fine   
+   
 #------quitting the application--(deprecated)------#
     def QuitApp(self):
         self.master.destroy()
